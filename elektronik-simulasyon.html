@@ -9,18 +9,62 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0f1a;
+        }
         #root { width: 100%; }
+
+        /* Stepper input styles */
+        .stepper-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: #1e293b;
+            border: 2px solid;
+            border-radius: 8px;
+            color: #e2e8f0;
+            fontSize: 13px;
+            outline: none;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .stepper-input:focus {
+            background: #2d3b52;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .stepper-button {
+            padding: 8px 12px;
+            background: rgba(59, 130, 246, 0.15);
+            border: 2px solid;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            user-select: none;
+            transition: all 0.15s;
+            min-width: 40px;
+        }
+
+        .stepper-button:hover {
+            background: rgba(59, 130, 246, 0.25);
+            transform: scale(1.05);
+        }
+
+        .stepper-button:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useMemo, useEffect, useRef, useCallback } = React;
+        const { useState, useMemo, useEffect, useRef } = React;
 
         // ============================================
-        // GENİŞLETİLMİŞ MALZEME KÜTÜPHANELERİ
+        // MALZEME KÜTÜPHANELERİ
         // ============================================
 
         const dielectricMaterials = [
@@ -62,47 +106,6 @@
           { name: 'Çinko (Zn)', conductivity: 1.69e7, color: '#bac4c8', density: 7140 },
         ];
 
-        const wireDatabase = {
-          enamel: [
-            { awg: 10, diameter: 2.588, resistance: 3.277, name: 'AWG 10 Emaye', type: 'enamel' },
-            { awg: 12, diameter: 2.053, resistance: 5.211, name: 'AWG 12 Emaye', type: 'enamel' },
-            { awg: 14, diameter: 1.628, resistance: 8.286, name: 'AWG 14 Emaye', type: 'enamel' },
-            { awg: 16, diameter: 1.291, resistance: 13.17, name: 'AWG 16 Emaye', type: 'enamel' },
-            { awg: 18, diameter: 1.024, resistance: 20.95, name: 'AWG 18 Emaye', type: 'enamel' },
-            { awg: 20, diameter: 0.812, resistance: 33.31, name: 'AWG 20 Emaye', type: 'enamel' },
-            { awg: 22, diameter: 0.644, resistance: 52.94, name: 'AWG 22 Emaye', type: 'enamel' },
-            { awg: 24, diameter: 0.511, resistance: 84.22, name: 'AWG 24 Emaye', type: 'enamel' },
-            { awg: 26, diameter: 0.405, resistance: 133.9, name: 'AWG 26 Emaye', type: 'enamel' },
-            { awg: 28, diameter: 0.321, resistance: 212.9, name: 'AWG 28 Emaye', type: 'enamel' },
-            { awg: 30, diameter: 0.255, resistance: 338.6, name: 'AWG 30 Emaye', type: 'enamel' },
-            { awg: 32, diameter: 0.202, resistance: 538.3, name: 'AWG 32 Emaye', type: 'enamel' },
-            { awg: 34, diameter: 0.160, resistance: 856.0, name: 'AWG 34 Emaye', type: 'enamel' },
-            { awg: 36, diameter: 0.127, resistance: 1361, name: 'AWG 36 Emaye', type: 'enamel' },
-            { awg: 38, diameter: 0.101, resistance: 2164, name: 'AWG 38 Emaye', type: 'enamel' },
-            { awg: 40, diameter: 0.080, resistance: 3441, name: 'AWG 40 Emaye', type: 'enamel' },
-          ],
-          litz: [
-            { strands: 7, strandAwg: 41, diameter: 0.25, resistance: 1100, name: '7x41 Litz Ø0.25mm', type: 'litz' },
-            { strands: 20, strandAwg: 44, diameter: 0.40, resistance: 450, name: '20x44 Litz Ø0.40mm', type: 'litz' },
-            { strands: 50, strandAwg: 44, diameter: 0.60, resistance: 180, name: '50x44 Litz Ø0.60mm', type: 'litz' },
-            { strands: 100, strandAwg: 44, diameter: 0.80, resistance: 90, name: '100x44 Litz Ø0.80mm', type: 'litz' },
-            { strands: 150, strandAwg: 44, diameter: 1.00, resistance: 60, name: '150x44 Litz Ø1.00mm', type: 'litz' },
-            { strands: 200, strandAwg: 46, diameter: 1.20, resistance: 50, name: '200x46 Litz Ø1.20mm (ISOLA)', type: 'litz' },
-            { strands: 300, strandAwg: 44, diameter: 1.50, resistance: 30, name: '300x44 Litz Ø1.50mm', type: 'litz' },
-            { strands: 500, strandAwg: 44, diameter: 1.90, resistance: 18, name: '500x44 Litz Ø1.90mm', type: 'litz' },
-            { strands: 660, strandAwg: 44, diameter: 2.00, resistance: 13.6, name: '660x44 Litz Ø2.00mm', type: 'litz' },
-          ],
-          custom: [
-            { diameter: 0.40, resistance: 137, name: 'Emaye Ø0.40mm', type: 'custom' },
-            { diameter: 0.50, resistance: 87.5, name: 'Emaye Ø0.50mm', type: 'custom' },
-            { diameter: 0.60, resistance: 60.8, name: 'Emaye Ø0.60mm', type: 'custom' },
-            { diameter: 0.80, resistance: 34.2, name: 'Emaye Ø0.80mm', type: 'custom' },
-            { diameter: 1.00, resistance: 21.9, name: 'Emaye Ø1.00mm', type: 'custom' },
-            { diameter: 1.50, resistance: 9.73, name: 'Emaye Ø1.50mm', type: 'custom' },
-            { diameter: 2.00, resistance: 5.48, name: 'Emaye Ø2.00mm', type: 'custom' },
-          ]
-        };
-
         const ferriteMaterials = [
           { name: 'Hava Çekirdek', mu: 1, losses: 0, color: '#e3f2fd' },
           { name: 'Demir Tozu T37-2', mu: 8, losses: 0.002, color: '#ffccbc' },
@@ -114,8 +117,200 @@
           { name: 'Nanokristalin', mu: 80000, losses: 0.008, color: '#7e57c2' },
         ];
 
-        // Component implementation continues...
-        // (Rest of the component code from the original file)
+        // ============================================
+        // STEPPER INPUT BİLEŞENİ (YENİ!)
+        // ============================================
+
+        const StepperInput = ({ label, value, onChange, min, max, step, unit, color }) => {
+          const [inputValue, setInputValue] = useState(value.toString());
+          const inputRef = useRef(null);
+
+          useEffect(() => {
+            const formatted = step >= 1 ? value.toFixed(0) :
+                            step >= 0.1 ? value.toFixed(1) :
+                            step >= 0.01 ? value.toFixed(2) : value.toFixed(3);
+            setInputValue(formatted);
+          }, [value, step]);
+
+          const clampValue = (v) => Math.max(min, Math.min(max, v));
+
+          const handleIncrement = () => {
+            const newVal = clampValue(parseFloat(value) + step);
+            onChange(newVal);
+          };
+
+          const handleDecrement = () => {
+            const newVal = clampValue(parseFloat(value) - step);
+            onChange(newVal);
+          };
+
+          const handleInputChange = (e) => {
+            setInputValue(e.target.value);
+          };
+
+          const handleInputBlur = () => {
+            const newVal = parseFloat(inputValue);
+            if (!isNaN(newVal)) {
+              onChange(clampValue(newVal));
+            } else {
+              setInputValue(value.toString());
+            }
+          };
+
+          const handleKeyDown = (e) => {
+            if (e.key === 'Enter') {
+              handleInputBlur();
+              inputRef.current?.blur();
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              handleIncrement();
+            } else if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              handleDecrement();
+            }
+          };
+
+          return (
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '500', marginBottom: '8px' }}>
+                {label}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  onClick={handleDecrement}
+                  className="stepper-button"
+                  style={{ color: color, borderColor: `${color}60` }}
+                >
+                  ▼
+                </button>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  onBlur={handleInputBlur}
+                  onKeyDown={handleKeyDown}
+                  className="stepper-input"
+                  style={{ borderColor: `${color}60`, flex: 1 }}
+                />
+                <button
+                  onClick={handleIncrement}
+                  className="stepper-button"
+                  style={{ color: color, borderColor: `${color}60` }}
+                >
+                  ▲
+                </button>
+                <span style={{
+                  color: color,
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  minWidth: '40px',
+                  textAlign: 'center'
+                }}>
+                  {unit}
+                </span>
+              </div>
+              <div style={{
+                marginTop: '4px',
+                fontSize: '9px',
+                color: '#64748b',
+                textAlign: 'center'
+              }}>
+                Min: {min} | Max: {max} | Adım: {step}
+              </div>
+            </div>
+          );
+        };
+
+        // ============================================
+        // BİRİMLİ INPUT BİLEŞENİ
+        // ============================================
+
+        const UnitInput = ({ label, value, onChange, unit, onUnitChange, units, color }) => {
+          const [inputValue, setInputValue] = useState(value.toString());
+
+          useEffect(() => {
+            setInputValue(value.toString());
+          }, [value]);
+
+          const handleChange = (e) => {
+            setInputValue(e.target.value);
+          };
+
+          const handleBlur = () => {
+            const newVal = parseFloat(inputValue);
+            if (!isNaN(newVal) && newVal >= 0) {
+              onChange(newVal);
+            } else {
+              setInputValue(value.toString());
+            }
+          };
+
+          const handleKeyDown = (e) => {
+            if (e.key === 'Enter') {
+              handleBlur();
+            }
+          };
+
+          return (
+            <div style={{ marginBottom: '14px' }}>
+              <div style={{ color: '#94a3b8', fontSize: '10px', marginBottom: '6px' }}>{label}</div>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  onKeyDown={handleKeyDown}
+                  style={{
+                    flex: 1,
+                    padding: '10px 12px',
+                    background: '#1e293b',
+                    border: `2px solid ${color}40`,
+                    borderRadius: '8px',
+                    color: '#e2e8f0',
+                    fontSize: '13px',
+                    outline: 'none',
+                    minWidth: '60px'
+                  }}
+                />
+                {units && onUnitChange ? (
+                  <select
+                    value={unit}
+                    onChange={e => onUnitChange(e.target.value)}
+                    style={{
+                      padding: '10px 8px',
+                      minWidth: '70px',
+                      background: '#1e293b',
+                      border: `2px solid ${color}40`,
+                      borderRadius: '8px',
+                      color: color,
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      fontWeight: '600'
+                    }}
+                  >
+                    {units.map(u => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                ) : (
+                  <span style={{
+                    padding: '10px 12px',
+                    background: '#1e293b',
+                    border: `2px solid ${color}40`,
+                    borderRadius: '8px',
+                    color: color,
+                    fontSize: '12px',
+                    fontWeight: '600'
+                  }}>{unit}</span>
+                )}
+              </div>
+            </div>
+          );
+        };
+
+        // ============================================
+        // ANA UYGULAMA
+        // ============================================
 
         const ElektronikSimulasyon = () => {
           const [currentPage, setCurrentPage] = useState('capacitor');
@@ -147,8 +342,6 @@
           const [coreInnerDiameter, setCoreInnerDiameter] = useState(10);
           const [coreHeight, setCoreHeight] = useState(8);
           const [turns, setTurns] = useState(40);
-          const [wireCategory, setWireCategory] = useState('enamel');
-          const [selectedWireIndex, setSelectedWireIndex] = useState(6);
           const [lcCapacitance, setLcCapacitance] = useState(100);
           const [lcCapUnit, setLcCapUnit] = useState('pF');
           const [lcResistance, setLcResistance] = useState(1);
@@ -159,18 +352,6 @@
           const [lcVoltage, setLcVoltage] = useState(5);
           const [useCapFromDesign, setUseCapFromDesign] = useState(false);
 
-          // Dalga States
-          const [waveSourceMode, setWaveSourceMode] = useState('design');
-          const [manualC, setManualC] = useState(100);
-          const [manualCUnit, setManualCUnit] = useState('pF');
-          const [manualL, setManualL] = useState(100);
-          const [manualLUnit, setManualLUnit] = useState('µH');
-          const [manualR, setManualR] = useState(10);
-          const [manualRUnit, setManualRUnit] = useState('Ω');
-          const [manualFreq, setManualFreq] = useState(50);
-          const [manualFreqUnit, setManualFreqUnit] = useState('kHz');
-          const [manualVoltage, setManualVoltage] = useState(5);
-
           // Animasyon
           const [isPlaying, setIsPlaying] = useState(true);
           const [animTime, setAnimTime] = useState(0);
@@ -180,18 +361,13 @@
           // Sabitler
           const mu0 = 4 * Math.PI * 1e-7;
           const epsilon0 = 8.854e-12;
-          const rhoCopper = 1.68e-8;
 
           // Birim çarpanları
           const freqMultiplier = { 'Hz': 1, 'kHz': 1e3, 'MHz': 1e6, 'GHz': 1e9 };
           const capMultiplier = { 'pF': 1e-12, 'nF': 1e-9, 'µF': 1e-6, 'mF': 1e-3 };
-          const indMultiplier = { 'nH': 1e-9, 'µH': 1e-6, 'mH': 1e-3, 'H': 1 };
-          const resMultiplier = { 'mΩ': 1e-3, 'Ω': 1, 'kΩ': 1e3, 'MΩ': 1e6 };
 
           const convertToHz = (v, u) => (v || 0) * (freqMultiplier[u] || 1);
           const convertToFarad = (v, u) => (v || 0) * (capMultiplier[u] || 1e-12);
-          const convertToHenry = (v, u) => (v || 0) * (indMultiplier[u] || 1e-6);
-          const convertToOhm = (v, u) => (v || 0) * (resMultiplier[u] || 1);
 
           // Animasyon
           useEffect(() => {
@@ -205,6 +381,404 @@
             }
           }, [isPlaying, animSpeed]);
 
+          // Plaka senkronizasyonu
+          const updatePlate1Width = (v) => { setPlate1Width(v); if (syncPlates) setPlate2Width(v); };
+          const updatePlate1Height = (v) => { setPlate1Height(v); if (syncPlates) setPlate2Height(v); };
+          const updatePlate1Diameter = (v) => { setPlate1Diameter(v); if (syncPlates) setPlate2Diameter(v); };
+          const updatePlate1Thickness = (v) => { setPlate1Thickness(v); if (syncPlates) setPlate2Thickness(v); };
+
+          // Formatlama fonksiyonları
+          const formatValue = (value, unit, decimals = 2) => {
+            if (!isFinite(value) || isNaN(value)) return '∞';
+            if (value === 0) return `0 ${unit}`;
+            const abs = Math.abs(value);
+            if (abs >= 1e9) return `${(value / 1e9).toFixed(decimals)} G${unit}`;
+            if (abs >= 1e6) return `${(value / 1e6).toFixed(decimals)} M${unit}`;
+            if (abs >= 1e3) return `${(value / 1e3).toFixed(decimals)} k${unit}`;
+            if (abs >= 1) return `${value.toFixed(decimals)} ${unit}`;
+            if (abs >= 1e-3) return `${(value * 1e3).toFixed(decimals)} m${unit}`;
+            if (abs >= 1e-6) return `${(value * 1e6).toFixed(decimals)} µ${unit}`;
+            if (abs >= 1e-9) return `${(value * 1e9).toFixed(decimals)} n${unit}`;
+            if (abs >= 1e-12) return `${(value * 1e12).toFixed(decimals)} p${unit}`;
+            return `${value.toExponential(1)} ${unit}`;
+          };
+
+          // Malzeme referansları
+          const material = dielectricMaterials[selectedDielectric];
+          const plateMat = plateMaterials[plateMaterial];
+          const plateGap = dielectricThickness + airGapThickness;
+          const ferrite = ferriteMaterials[coreType];
+
+          // Frekans dönüşümleri
+          const realCapFrequency = convertToHz(capFrequency, capFreqUnit);
+          const realLcFrequency = convertToHz(lcFrequency, lcFreqUnit);
+          const realLcCapacitance = useCapFromDesign ? 0 : convertToFarad(lcCapacitance, lcCapUnit);
+
+          // ============================================
+          // KAPASİTÖR HESAPLAMALARI
+          // ============================================
+          const capCalc = useMemo(() => {
+            // Alan hesabı
+            let area1 = 0, area2 = 0;
+            if (plateShape === 'circle') {
+              area1 = Math.PI * Math.pow((plate1Diameter || 1) / 2, 2);
+              area2 = Math.PI * Math.pow((plate2Diameter || 1) / 2, 2);
+            } else if (plateShape === 'square') {
+              area1 = Math.pow(plate1Width || 1, 2);
+              area2 = Math.pow(plate2Width || 1, 2);
+            } else {
+              area1 = (plate1Width || 1) * (plate1Height || 1);
+              area2 = (plate2Width || 1) * (plate2Height || 1);
+            }
+            const effectiveArea = Math.min(area1, area2) * (numberOfLayers || 1);
+            const areaM2 = effectiveArea * 1e-6;
+
+            // Mesafe hesabı
+            const dielM = Math.max(dielectricThickness || 0.001, 0.001) * 1e-3;
+            const airM = Math.max(airGapThickness || 0, 0) * 1e-3;
+            const totalGapM = dielM + airM;
+
+            // Kapasitans hesabı: C = ε₀εᵣA/d
+            let capacitance, effectiveEpsilon;
+            if (airM > 0 && dielectricThickness > 0) {
+              const cD = (epsilon0 * material.epsilon * areaM2) / dielM;
+              const cA = (epsilon0 * areaM2) / airM;
+              capacitance = 1 / (1/cD + 1/cA);
+              effectiveEpsilon = totalGapM / (dielM / material.epsilon + airM);
+            } else if (dielectricThickness > 0) {
+              capacitance = (epsilon0 * material.epsilon * areaM2) / dielM;
+              effectiveEpsilon = material.epsilon;
+            } else {
+              capacitance = (epsilon0 * areaM2) / Math.max(totalGapM, 1e-6);
+              effectiveEpsilon = 1;
+            }
+
+            // Frekans bazlı hesaplamalar
+            const omega = 2 * Math.PI * Math.max(realCapFrequency, 1);
+            const eslH = (capParasiticL || 1) * 1e-9;
+
+            const xc = 1 / (omega * Math.max(capacitance, 1e-18));
+            const xl = omega * eslH;
+            const srf = 1 / (2 * Math.PI * Math.sqrt(eslH * Math.max(capacitance, 1e-18)));
+            const esr = material.tanDelta * xc + 0.01;
+            const impedance = Math.sqrt(esr * esr + Math.pow(xc - xl, 2));
+            const phase = Math.atan2(-(xc - xl), esr) * 180 / Math.PI;
+            const qualityFactor = Math.abs(xc - xl) / Math.max(esr, 0.001);
+            const charge = capacitance * (capVoltage || 0);
+            const storedEnergy = 0.5 * capacitance * Math.pow(capVoltage || 0, 2);
+            const electricField = (capVoltage || 0) / totalGapM;
+            const electricFieldMV = electricField / 1e6;
+            const surfaceChargeDensity = charge / (areaM2 / (numberOfLayers || 1));
+            const breakdownV = material.breakdownStrength * 1e6 * dielM;
+
+            return {
+              capacitance,
+              capacitancePF: capacitance * 1e12,
+              capacitanceNF: capacitance * 1e9,
+              xc, xl, esr, impedance, phase, qualityFactor, srf,
+              charge, chargeNC: charge * 1e9, chargePc: charge * 1e12,
+              storedEnergy, storedEnergyUJ: storedEnergy * 1e6, storedEnergyNJ: storedEnergy * 1e9,
+              electricField, electricFieldMV, surfaceChargeDensity,
+              breakdownV, effectiveEpsilon,
+              totalGapMM: (dielM + airM) * 1000,
+              plateArea: effectiveArea
+            };
+          }, [plateShape, plate1Width, plate1Height, plate1Diameter, plate2Width, plate2Height, plate2Diameter,
+              dielectricThickness, airGapThickness, selectedDielectric, realCapFrequency, capVoltage,
+              capParasiticL, material, numberOfLayers]);
+
+          // ============================================
+          // İNDÜKTÖR HESAPLAMALARI
+          // ============================================
+          const inductorCalc = useMemo(() => {
+            const N = Math.max(Math.min(turns || 1, 1000), 1);
+            const outerR = Math.max(coreDiameter || 5, 5) / 2 / 1000;
+            const innerR = Math.max(Math.min(coreInnerDiameter || 2, (coreDiameter || 5) - 2), 2) / 2 / 1000;
+            const h = Math.max(coreHeight || 2, 2) / 1000;
+            const meanR = (outerR + innerR) / 2;
+            const coreArea = (outerR - innerR) * h;
+            const meanLen = 2 * Math.PI * meanR;
+
+            const inductance = (mu0 * ferrite.mu * N * N * coreArea) / meanLen;
+            const wireLen = N * meanLen * 2;
+            const dcR = 0.02 * wireLen;
+            const omega = 2 * Math.PI * Math.max(realLcFrequency, 1);
+            const xl = omega * inductance;
+            const esr = dcR * 1.5;
+            const q = esr > 0 ? xl / esr : Infinity;
+            const paraC = N * 0.5e-12;
+            const srf = 1 / (2 * Math.PI * Math.sqrt(inductance * paraC));
+
+            return {
+              inductance,
+              inductanceUH: inductance * 1e6,
+              inductanceMH: inductance * 1e3,
+              esr, xl, q, srf, dcR, wireLen
+            };
+          }, [coreType, coreDiameter, coreInnerDiameter, coreHeight, turns, realLcFrequency, ferrite]);
+
+          // ============================================
+          // KAPASİTÖR SAYFASI
+          // ============================================
+          const renderCapacitorPage = () => {
+            const renderVisualization = () => {
+              const svgW = 600, svgH = 400;
+              const cx = 250;
+
+              const maxW = plateShape === 'circle' ? Math.max(plate1Diameter, plate2Diameter) : Math.max(plate1Width, plate2Width);
+              const scale = Math.min(2.5, 160 / Math.max(maxW, 10));
+
+              const p1W = (plateShape === 'circle' ? plate1Diameter : plate1Width) * scale;
+              const p2W = (plateShape === 'circle' ? plate2Diameter : plate2Width) * scale;
+              const p1T = Math.max(plate1Thickness * scale * 4, 8);
+              const p2T = Math.max(plate2Thickness * scale * 4, 8);
+
+              const visualGap = Math.max(plateGap * 20, 10);
+              const baseY = 200;
+              const p1Y = baseY - visualGap / 2 - p1T;
+              const p2Y = baseY + visualGap / 2;
+
+              const chargeIntensity = Math.min(capCalc.chargeNC / 50, 1);
+              const chargeAnim = Math.sin(animTime * 2) * 0.3 + 0.7;
+
+              return (
+                <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', height: '400px' }}>
+                  <defs>
+                    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#0c1222"/>
+                      <stop offset="100%" stopColor="#1a2744"/>
+                    </linearGradient>
+                    <linearGradient id="plate1Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor={plateMat.color}/>
+                      <stop offset="100%" stopColor={plateMat.color} stopOpacity="0.7"/>
+                    </linearGradient>
+                    <linearGradient id="eFieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ef4444" stopOpacity={0.4 * chargeAnim}/>
+                      <stop offset="50%" stopColor="#fbbf24" stopOpacity={0.2 * chargeAnim}/>
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.4 * chargeAnim}/>
+                    </linearGradient>
+                    <pattern id="dielPattern" patternUnits="userSpaceOnUse" width="6" height="6">
+                      <rect width="6" height="6" fill={material.color}/>
+                      <circle cx="3" cy="3" r="1.5" fill="rgba(0,0,0,0.1)"/>
+                    </pattern>
+                    <filter id="glow"><feGaussianBlur stdDeviation="2"/></filter>
+                  </defs>
+
+                  <rect width={svgW} height={svgH} fill="url(#bgGrad)" rx="12"/>
+
+                  {/* Elektrik Alan */}
+                  <rect x={cx - Math.max(p1W, p2W)/2 - 10} y={p1Y + p1T}
+                    width={Math.max(p1W, p2W) + 20} height={visualGap}
+                    fill="url(#eFieldGrad)" rx="4"/>
+
+                  {/* Dielektrik */}
+                  {dielectricThickness > 0 && (
+                    <rect x={cx - Math.max(p1W, p2W)/2} y={p1Y + p1T + 2}
+                      width={Math.max(p1W, p2W)} height={visualGap - 4}
+                      fill="url(#dielPattern)" stroke={material.color} strokeWidth="1" rx="3" opacity="0.8"/>
+                  )}
+
+                  {/* Alan çizgileri */}
+                  {[...Array(9)].map((_, i) => {
+                    const x = cx + (i - 4) * (Math.min(p1W, p2W) / 10);
+                    const opacity = (0.3 + chargeIntensity * 0.5) * chargeAnim;
+                    return (
+                      <g key={i}>
+                        <line x1={x} y1={p1Y + p1T + 4} x2={x} y2={p2Y - 4}
+                          stroke="#60a5fa" strokeWidth="1.5" strokeDasharray="5,3" opacity={opacity}/>
+                        <polygon points={`${x},${p2Y - 6} ${x-3},${p2Y - 11} ${x+3},${p2Y - 11}`}
+                          fill="#60a5fa" opacity={opacity}/>
+                      </g>
+                    );
+                  })}
+
+                  {/* Plakalar */}
+                  <rect x={cx - p1W/2} y={p1Y} width={p1W} height={p1T} fill="url(#plate1Grad)" stroke="#666" strokeWidth="1.5" rx="3"/>
+                  <rect x={cx - p2W/2} y={p2Y} width={p2W} height={p2T} fill="url(#plate1Grad)" stroke="#666" strokeWidth="1.5" rx="3"/>
+
+                  {/* Yükler */}
+                  {[...Array(Math.min(6, Math.floor(p1W / 18)))].map((_, i) => (
+                    <g key={`c${i}`} opacity={0.5 + chargeIntensity * 0.5 * chargeAnim}>
+                      <circle cx={cx - p1W/2.5 + i * (p1W/3.5)} cy={p1Y + p1T/2} r="6" fill="#ef4444" filter="url(#glow)"/>
+                      <text x={cx - p1W/2.5 + i * (p1W/3.5)} y={p1Y + p1T/2 + 4} fill="#fff" fontSize="10" textAnchor="middle" fontWeight="bold">+</text>
+                      <circle cx={cx - p2W/2.5 + i * (p2W/3.5)} cy={p2Y + p2T/2} r="6" fill="#3b82f6" filter="url(#glow)"/>
+                      <text x={cx - p2W/2.5 + i * (p2W/3.5)} y={p2Y + p2T/2 + 5} fill="#fff" fontSize="12" textAnchor="middle" fontWeight="bold">−</text>
+                    </g>
+                  ))}
+
+                  {/* Terminaller */}
+                  <line x1={cx} y1={p1Y} x2={cx} y2={25} stroke="#ef4444" strokeWidth="3"/>
+                  <circle cx={cx} cy={20} r="7" fill="#ef4444"/>
+                  <line x1={cx} y1={p2Y + p2T} x2={cx} y2={svgH - 25} stroke="#3b82f6" strokeWidth="3"/>
+                  <circle cx={cx} cy={svgH - 20} r="7" fill="#3b82f6"/>
+
+                  {/* Sonuç paneli */}
+                  <rect x="420" y="15" width="170" height="370" fill="rgba(15,23,42,0.97)" rx="10" stroke="#334155"/>
+                  <text x="505" y="38" fill="#f59e0b" fontSize="13" textAnchor="middle" fontWeight="700">📊 Hesaplanan Değerler</text>
+                  <line x1="430" y1="48" x2="580" y2="48" stroke="#334155"/>
+
+                  {[
+                    { label: 'Kapasitans C', value: capCalc.capacitancePF < 1000 ? `${capCalc.capacitancePF.toFixed(2)} pF` : `${capCalc.capacitanceNF.toFixed(3)} nF`, color: '#3b82f6' },
+                    { label: 'Yük Q', value: capCalc.chargeNC < 1 ? `${capCalc.chargePc.toFixed(1)} pC` : `${capCalc.chargeNC.toFixed(3)} nC`, color: '#10b981' },
+                    { label: 'Enerji U', value: capCalc.storedEnergyUJ < 1 ? `${capCalc.storedEnergyNJ.toFixed(1)} nJ` : `${capCalc.storedEnergyUJ.toFixed(3)} µJ`, color: '#ec4899' },
+                    { label: 'E-Alan', value: `${capCalc.electricFieldMV.toFixed(2)} MV/m`, color: '#fbbf24' },
+                    { label: 'Xc', value: formatValue(capCalc.xc, 'Ω'), color: '#22d3ee' },
+                    { label: 'ESR', value: formatValue(capCalc.esr, 'Ω'), color: '#f97316' },
+                    { label: 'ESL', value: `${capParasiticL} nH`, color: '#a78bfa' },
+                    { label: 'SRF', value: formatValue(capCalc.srf, 'Hz', 0), color: '#10b981' },
+                    { label: 'Q Faktörü', value: capCalc.qualityFactor.toFixed(0), color: '#fbbf24' },
+                    { label: '|Z|', value: formatValue(capCalc.impedance, 'Ω'), color: '#f472b6' },
+                    { label: 'εᵣ eff', value: capCalc.effectiveEpsilon.toFixed(2), color: '#a78bfa' },
+                    { label: 'V max', value: formatValue(capCalc.breakdownV, 'V', 0), color: '#f97316' },
+                  ].map((item, i) => (
+                    <g key={i}>
+                      <text x="432" y={68 + i * 26} fill="#94a3b8" fontSize="9">{item.label}</text>
+                      <text x="575" y={68 + i * 26} fill={item.color} fontSize="10" textAnchor="end" fontWeight="600">{item.value}</text>
+                    </g>
+                  ))}
+                </svg>
+              );
+            };
+
+            return (
+              <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '14px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '700px', overflowY: 'auto', paddingRight: '8px' }}>
+
+                  {/* Plaka Geometrisi */}
+                  <div style={{ background: 'rgba(30,41,59,0.95)', borderRadius: '12px', padding: '14px', border: '1px solid rgba(245,158,11,0.3)' }}>
+                    <div style={{ color: '#f59e0b', fontSize: '13px', fontWeight: '700', marginBottom: '14px' }}>📐 PLAKA GEOMETRİSİ</div>
+
+                    <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
+                      {[{ id: 'rectangle', icon: '▬', name: 'Dikdörtgen' }, { id: 'square', icon: '■', name: 'Kare' }, { id: 'circle', icon: '●', name: 'Daire' }].map(s => (
+                        <button key={s.id} onClick={() => setPlateShape(s.id)} style={{
+                          flex: 1, padding: '10px', background: plateShape === s.id ? 'rgba(245,158,11,0.2)' : 'rgba(0,0,0,0.3)',
+                          border: `2px solid ${plateShape === s.id ? '#f59e0b' : 'transparent'}`,
+                          borderRadius: '8px', color: plateShape === s.id ? '#f59e0b' : '#64748b', cursor: 'pointer',
+                        }}><div style={{ fontSize: '18px' }}>{s.icon}</div><div style={{ fontSize: '9px', marginTop: '4px' }}>{s.name}</div></button>
+                      ))}
+                    </div>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', padding: '8px', background: 'rgba(16,185,129,0.1)', borderRadius: '8px', fontSize: '11px', color: '#10b981', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={syncPlates} onChange={e => setSyncPlates(e.target.checked)} style={{ accentColor: '#10b981' }}/>
+                      🔗 Plakaları Senkronize Et
+                    </label>
+
+                    <div style={{ marginBottom: '12px' }}>
+                      <div style={{ color: '#94a3b8', fontSize: '10px', marginBottom: '6px' }}>Plaka Malzemesi</div>
+                      <select value={plateMaterial} onChange={e => setPlateMaterial(Number(e.target.value))} style={{
+                        width: '100%', padding: '10px', background: '#1e293b', border: '1px solid #475569',
+                        borderRadius: '8px', color: '#e2e8f0', fontSize: '11px'
+                      }}>
+                        {plateMaterials.map((m, i) => <option key={i} value={i}>{m.name}</option>)}
+                      </select>
+                    </div>
+
+                    <div style={{ background: 'rgba(239,68,68,0.08)', padding: '12px', borderRadius: '10px', borderLeft: '4px solid #ef4444' }}>
+                      <div style={{ color: '#ef4444', fontSize: '11px', fontWeight: '600', marginBottom: '10px' }}>Plaka 1 (+)</div>
+                      {plateShape === 'circle' ? (
+                        <StepperInput label="Çap" value={plate1Diameter} onChange={updatePlate1Diameter} min={5} max={150} step={0.5} unit="mm" color="#22d3ee"/>
+                      ) : (
+                        <>
+                          <StepperInput label="Genişlik" value={plate1Width} onChange={v => { updatePlate1Width(v); if(plateShape === 'square') updatePlate1Height(v); }} min={5} max={150} step={0.5} unit="mm" color="#22d3ee"/>
+                          {plateShape === 'rectangle' && <StepperInput label="Yükseklik" value={plate1Height} onChange={updatePlate1Height} min={5} max={150} step={0.5} unit="mm" color="#f472b6"/>}
+                        </>
+                      )}
+                      <StepperInput label="Kalınlık" value={plate1Thickness} onChange={updatePlate1Thickness} min={0.05} max={5} step={0.05} unit="mm" color="#fbbf24"/>
+                    </div>
+                  </div>
+
+                  {/* Mesafe & Dielektrik */}
+                  <div style={{ background: 'rgba(30,41,59,0.95)', borderRadius: '12px', padding: '14px', border: '1px solid rgba(16,185,129,0.3)' }}>
+                    <div style={{ color: '#10b981', fontSize: '13px', fontWeight: '700', marginBottom: '14px' }}>📏 PLAKA MESAFESİ</div>
+
+                    <div style={{ background: 'linear-gradient(90deg, rgba(16,185,129,0.15), rgba(251,191,36,0.15))', padding: '14px', borderRadius: '10px', marginBottom: '14px', textAlign: 'center' }}>
+                      <div style={{ color: '#94a3b8', fontSize: '9px' }}>TOPLAM MESAFE</div>
+                      <div style={{ color: '#fbbf24', fontSize: '28px', fontWeight: '700' }}>{plateGap.toFixed(3)} mm</div>
+                    </div>
+
+                    <div style={{ marginBottom: '12px' }}>
+                      <div style={{ color: '#94a3b8', fontSize: '10px', marginBottom: '6px' }}>Dielektrik Malzeme</div>
+                      <select value={selectedDielectric} onChange={e => setSelectedDielectric(Number(e.target.value))} style={{
+                        width: '100%', padding: '10px', background: '#1e293b', border: '2px solid #10b981',
+                        borderRadius: '8px', color: '#e2e8f0', fontSize: '10px'
+                      }}>
+                        {dielectricMaterials.map((m, i) => (
+                          <option key={i} value={i}>[{m.category}] {m.name} (εᵣ={m.epsilon})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <StepperInput label="Dielektrik Kalınlığı" value={dielectricThickness} onChange={setDielectricThickness} min={0} max={10} step={0.01} unit="mm" color="#10b981"/>
+                    <StepperInput label="Hava Boşluğu" value={airGapThickness} onChange={setAirGapThickness} min={0} max={5} step={0.01} unit="mm" color="#93c5fd"/>
+                    <StepperInput label="Katman Sayısı" value={numberOfLayers} onChange={setNumberOfLayers} min={1} max={200} step={1} unit="" color="#fbbf24"/>
+                  </div>
+
+                  {/* Elektriksel */}
+                  <div style={{ background: 'rgba(30,41,59,0.95)', borderRadius: '12px', padding: '14px', border: '1px solid rgba(59,130,246,0.3)' }}>
+                    <div style={{ color: '#3b82f6', fontSize: '13px', fontWeight: '700', marginBottom: '14px' }}>⚡ ELEKTRİKSEL</div>
+
+                    <StepperInput label="Voltaj" value={capVoltage} onChange={setCapVoltage} min={0.1} max={1000} step={0.1} unit="V" color="#ef4444"/>
+
+                    <UnitInput label="Frekans" value={capFrequency} onChange={setCapFrequency}
+                      unit={capFreqUnit} onUnitChange={setCapFreqUnit} units={['Hz', 'kHz', 'MHz', 'GHz']} color="#fbbf24"/>
+
+                    <StepperInput label="ESL (Parazitik L)" value={capParasiticL} onChange={setCapParasiticL} min={0.1} max={100} step={0.1} unit="nH" color="#a78bfa"/>
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(30,41,59,0.6)', borderRadius: '14px', padding: '10px', border: '1px solid rgba(71,85,105,0.4)' }}>
+                  {renderVisualization()}
+                </div>
+              </div>
+            );
+          };
+
+          // ============================================
+          // LC DEVRE SAYFASI
+          // ============================================
+          const renderLCPage = () => {
+            return (
+              <div style={{ textAlign: 'center', padding: '40px', background: 'rgba(245,158,11,0.1)', borderRadius: '12px' }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔄</div>
+                <h2 style={{ color: '#f59e0b', fontSize: '24px', marginBottom: '12px' }}>
+                  LC Devre Sayfası
+                </h2>
+                <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+                  İndüktör: {inductorCalc.inductanceUH.toFixed(2)} µH | Frekans: {lcFrequency} {lcFreqUnit}
+                </p>
+                <div style={{ marginTop: '20px' }}>
+                  <StepperInput label="Dış Çap" value={coreDiameter} onChange={setCoreDiameter} min={5} max={80} step={0.5} unit="mm" color="#22d3ee"/>
+                  <StepperInput label="İç Çap" value={coreInnerDiameter} onChange={setCoreInnerDiameter} min={2} max={coreDiameter-2} step={0.5} unit="mm" color="#f472b6"/>
+                  <StepperInput label="Yükseklik" value={coreHeight} onChange={setCoreHeight} min={2} max={40} step={0.5} unit="mm" color="#a78bfa"/>
+                  <StepperInput label="Sarım" value={turns} onChange={setTurns} min={1} max={500} step={1} unit="" color="#fbbf24"/>
+                </div>
+              </div>
+            );
+          };
+
+          // ============================================
+          // DALGA FORMU SAYFASI
+          // ============================================
+          const renderWaveformPage = () => {
+            return (
+              <div style={{ textAlign: 'center', padding: '40px', background: 'rgba(16,185,129,0.1)', borderRadius: '12px' }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px' }}>📈</div>
+                <h2 style={{ color: '#10b981', fontSize: '24px', marginBottom: '12px' }}>
+                  Dalga Formu Analizi
+                </h2>
+                <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+                  Voltaj, akım ve güç dalga formları
+                </p>
+                <div style={{ marginTop: '20px' }}>
+                  <StepperInput label="Animasyon Hızı" value={animSpeed} onChange={setAnimSpeed} min={0.1} max={3} step={0.1} unit="×" color="#fbbf24"/>
+                </div>
+              </div>
+            );
+          };
+
+          // ============================================
+          // ANA RENDER
+          // ============================================
           return (
             <div style={{
               minHeight: '100vh',
@@ -223,36 +797,32 @@
                   background: 'linear-gradient(90deg, #3b82f6, #f59e0b, #10b981)',
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                 }}>⚡ ELEKTRONİK SİMÜLASYON</h1>
-                <p style={{ color: '#64748b', fontSize: '12px', margin: '6px 0 0 0' }}>
-                  Dielektrik Malzeme Kütüphanesi - İleri Düzey Eğitim Platformu v9.0
-                </p>
+                <p style={{ color: '#64748b', fontSize: '12px', margin: '6px 0 0 0' }}>İleri Düzey Eğitim Platformu v10.0 - Stepper Kontrol</p>
                 <p style={{ color: '#10b981', fontSize: '11px', marginTop: '8px' }}>
                   ✅ {dielectricMaterials.length} Dielektrik Malzeme | {plateMaterials.length} İletken | {ferriteMaterials.length} Manyetik Çekirdek
                 </p>
               </div>
 
-              <div style={{ textAlign: 'center', padding: '40px', background: 'rgba(16,185,129,0.1)', borderRadius: '12px' }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎉</div>
-                <h2 style={{ color: '#10b981', fontSize: '24px', marginBottom: '12px' }}>
-                  Simülasyon Başarıyla Yüklendi!
-                </h2>
-                <p style={{ color: '#94a3b8', fontSize: '14px', maxWidth: '600px', margin: '0 auto' }}>
-                  Bu elektronik simülasyon platformu, kapasitör tasarımı, LC devre analizi ve dalga formu görselleştirmesi için kapsamlı bir araç seti sunar.
-                </p>
-                <div style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <div style={{ background: 'rgba(59,130,246,0.2)', padding: '16px 24px', borderRadius: '10px', border: '1px solid #3b82f6' }}>
-                    <div style={{ color: '#3b82f6', fontSize: '12px' }}>Kapasitör Tasarım</div>
-                    <div style={{ color: '#fff', fontSize: '18px', fontWeight: '700' }}>27 Malzeme</div>
-                  </div>
-                  <div style={{ background: 'rgba(245,158,11,0.2)', padding: '16px 24px', borderRadius: '10px', border: '1px solid #f59e0b' }}>
-                    <div style={{ color: '#f59e0b', fontSize: '12px' }}>LC Devre</div>
-                    <div style={{ color: '#fff', fontSize: '18px', fontWeight: '700' }}>8 Çekirdek</div>
-                  </div>
-                  <div style={{ background: 'rgba(16,185,129,0.2)', padding: '16px 24px', borderRadius: '10px', border: '1px solid #10b981' }}>
-                    <div style={{ color: '#10b981', fontSize: '12px' }}>Tel Tipleri</div>
-                    <div style={{ color: '#fff', fontSize: '18px', fontWeight: '700' }}>32 Çeşit</div>
-                  </div>
-                </div>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', justifyContent: 'center' }}>
+                {[
+                  { id: 'capacitor', label: '🔋 Kapasitör Tasarım', color: '#3b82f6' },
+                  { id: 'lc', label: '🔄 LC Enerji Alışverişi', color: '#f59e0b' },
+                  { id: 'waveform', label: '📈 Dalga Formu & Faz', color: '#10b981' },
+                ].map(tab => (
+                  <button key={tab.id} onClick={() => setCurrentPage(tab.id)} style={{
+                    padding: '14px 32px', fontSize: '13px', fontWeight: '700',
+                    background: currentPage === tab.id ? `linear-gradient(135deg, ${tab.color}25, ${tab.color}08)` : 'rgba(30,41,59,0.5)',
+                    border: `2px solid ${currentPage === tab.id ? tab.color : '#334155'}`,
+                    borderRadius: '12px', color: currentPage === tab.id ? tab.color : '#94a3b8',
+                    cursor: 'pointer', boxShadow: currentPage === tab.id ? `0 4px 24px ${tab.color}25` : 'none',
+                  }}>{tab.label}</button>
+                ))}
+              </div>
+
+              <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+                {currentPage === 'capacitor' && renderCapacitorPage()}
+                {currentPage === 'lc' && renderLCPage()}
+                {currentPage === 'waveform' && renderWaveformPage()}
               </div>
             </div>
           );
