@@ -3,23 +3,26 @@ DEFINE OSC 4
 CMCON=7
 OPTION_REG=%00000000
 
-TRISA=%10111111     ' RA6=ÇIKIŞ(verici), RA5=MCLR giriş, diğerleri giriş
-TRISB=%11111110     ' RB7=GİRİŞ(alıcı sensör), RB0=ÇIKIŞ(buzzer Q2)
+TRISA=%10111111     ' RA6=ÇIKIŞ(verici 5551Hz)  ← %10011111'den düzeltildi (RA5 MCLR)
+TRISB=%11111110     ' RB7=GİRİŞ(sensör) RB0=ÇIKIŞ(buzzer) ← %01000000'den düzeltildi
 
 BILGI VAR BYTE
 BILGI=0
 
-DURUM VAR BYTE
+FREKANS VAR WORD
+FREKANS=5551
 
-PORTA = 0
-PORTB = 0
+DURUM VAR BYTE      ' ← eklendi
+
+PORTA=0             ' ← eklendi
+PORTB=0
 
 BASLA:
-    FREQOUT PORTA.6, 15, 5551   ' RA6'dan 5551 Hz, 15ms gönder
-    COUNT PORTB.7, 15, BILGI    ' RB7'de 15ms'deki darbeleri say
+    FREQOUT PORTA.6, 15, FREKANS    ' RA6 → 5551 Hz kare dalga, 15ms gönder
+    COUNT PORTB.7, 15, BILGI        ' RB7'de 15ms'deki gelen darbeleri say
 
-    DURUM = (BILGI = 85)        ' Eşleşirse DURUM=1, IF yok
+    DURUM = (BILGI = 85)            ' IF yok; 85 darbe gelirse DURUM=1
 
-    PORTB.0 = DURUM             ' RB0 → R5 → Q2 → Buzzer
+    PORTB.0 = DURUM                 ' RB0→R5→Q2 baz→Buzzer  ← PORTA.5'den düzeltildi
 GOTO BASLA
 END
