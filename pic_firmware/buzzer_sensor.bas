@@ -4,7 +4,7 @@ CMCON=7
 OPTION_REG=%00000000
 
 TRISA=%10111111
-TRISB=%11111110     ' %01000000 → RB7=GİRİŞ(sensör), RB0=ÇIKIŞ(buzzer)
+TRISB=%11111110
 
 BILGI VAR BYTE
 BILGI=0
@@ -12,15 +12,15 @@ BILGI=0
 FREKANS VAR WORD
 FREKANS=000000000000000000000000005551
 
-DURUM VAR BYTE      ' eklendi
+DURUM VAR BYTE
 
-PORTA=0             ' eklendi
+PORTA=0
 PORTB=0
 
 BASLA:
-    FREQOUT PORTA.6, 15, FREKANS    ' IF bloğu yerine: RA6'dan 5551Hz, 15ms gönder
-    COUNT PORTB.7, 15, BILGI        '                  RB7'deki darbeleri say
-    DURUM = (BILGI = 85)            '                  85 darbe = algılama (IF yok)
-    PORTB.0 = DURUM                 ' PORTA.5 yerine: RB0 → R5 → Q2 → Buzzer
+    FREQOUT PORTA.6,15,FREKANS
+    COUNT PORTB.7,15,BILGI
+    DURUM=(BILGI=85)
+    PORTB.0=DURUM
 GOTO BASLA
 END
